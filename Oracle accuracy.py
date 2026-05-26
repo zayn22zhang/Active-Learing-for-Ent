@@ -2,7 +2,6 @@
 
 import numpy as np
 import cvxpy as cp
-from scipy.linalg import eigh
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -20,9 +19,9 @@ def ghz_noise_state(p):
     return p * ghz_state(3) + (1-p) * np.eye(8)/8
 
 # ============================================
-# 2. 固定多胞形顶点（高密度）
+# 2. 固定多胞形顶点（100 个，加速）
 # ============================================
-def fibonacci_vertices(N=500):
+def fibonacci_vertices(N=100):
     sx = np.array([[0,1],[1,0]], dtype=complex)
     sy = np.array([[0,-1j],[1j,0]], dtype=complex)
     sz = np.array([[1,0],[0,-1]], dtype=complex)
@@ -43,7 +42,7 @@ def fibonacci_vertices(N=500):
     return verts
 
 # ============================================
-# 3. 部分转置（子系统 B 或 C）
+# 3. 部分转置（子系统 B）
 # ============================================
 def partial_transpose_4x4_cvx(X, system=0):
     Y_raw = np.empty((4,4), dtype=object)
@@ -51,10 +50,10 @@ def partial_transpose_4x4_cvx(X, system=0):
         for j in range(2):
             for k in range(2):
                 for l in range(2):
-                    if system == 0:   # 转置 B
+                    if system == 0:
                         row_out = 2*k + j
                         col_out = 2*i + l
-                    else:             # 转置 C
+                    else:
                         row_out = 2*i + l
                         col_out = 2*k + j
                     row_in = 2*i + j
@@ -64,22 +63,22 @@ def partial_transpose_4x4_cvx(X, system=0):
     return (PT + PT.H) / 2
 
 # ============================================
-# 4. 置换矩阵（B|AC 和 C|AB 分区）
+# 4. 置换矩阵
 # ============================================
 P_BAC = np.zeros((8,8))
 for a in range(2):
     for b in range(2):
         for c in range(2):
-            col = (b<<2) | (a<<1) | c   # B A C
-            row = (a<<2) | (b<<1) | c   # A B C
+            col = (b<<2) | (a<<1) | c
+            row = (a<<2) | (b<<1) | c
             P_BAC[row, col] = 1.0
 
 P_CAB = np.zeros((8,8))
 for a in range(2):
     for b in range(2):
         for c in range(2):
-            col = (a<<2) | (b<<1) | c   # A B C
-            row = (c<<2) | (a<<1) | b   # C A B
+            col = (a<<2) | (b<<1) | c
+            row = (c<<2) | (a<<1) | b
             P_CAB[row, col] = 1.0
 
 # ============================================
@@ -117,7 +116,7 @@ def is_biseparable(rho, vertices, epsilon=1e-3):
         rho_approx += P_CAB @ raw @ P_CAB.T
     constraints.append(sum(cp.trace(T) for T in T_CAB) == wC)
 
-    # PPT 约束（统一转置 B 子系统）
+    # PPT 约束（转置 B 子系统）
     for Tlist in [T_ABC, T_BAC, T_CAB]:
         for T in Tlist:
             constraints.append(T >> 0)
@@ -126,20 +125,14 @@ def is_biseparable(rho, vertices, epsilon=1e-3):
     constraints.append(cp.norm(rho_approx - rho, 'fro') <= epsilon)
 
     prob = cp.Problem(cp.Minimize(0), constraints)
-    solver = cp.MOSEK if 'MOSEK' in cp.installed_solvers() else cp.SCS
-    try:
-        if solver == cp.MOSEK:
-            prob.solve(solver=cp.MOSEK, verbose=False)
-        else:
-            prob.solve(solver=cp.SCS, eps=1e-5, max_iters=5000, verbose=False)
-    except:
-        return False
+    # 使用 SCS，提高精度
+    prob.solve(solver=cp.SCS, eps=1e-5, max_iters=10000, verbose=False)
     return prob.status in ['optimal', 'optimal_inaccurate']
 
 # ============================================
-# 6. 二分搜索阈值（固定顶点集和 epsilon）
+# 6. 二分搜索阈值
 # ============================================
-def compute_threshold(vertices, epsilon=1e-3, tol=1e-6, max_iter=45):
+def compute_threshold(vertices, epsilon=1e-3, tol=1e-5, max_iter=40):
     lo, hi = 0.0, 1.0
     for _ in range(max_iter):
         mid = (lo+hi)/2
@@ -153,24 +146,12 @@ def compute_threshold(vertices, epsilon=1e-3, tol=1e-6, max_iter=45):
     return lo
 
 # ============================================
-# 7. 主程序：固定顶点，逐步收紧 epsilon
+# 7. 主程序
 # ============================================
 if __name__ == "__main__":
-    print("="*70)
-    print("Fixed high-density polytope (no adaptive addition)")
-    print("Target exact BSEP bound for GHZ = 0.42857")
-    print("="*70)
-    vertices = fibonacci_vertices(500)
-    print(f"Using {len(vertices)} vertices (Fibonacci + poles)")
-    epsilons = [1e-3, 5e-4, 2e-4, 1e-4]
-    thresholds = []
-    for eps in epsilons:
-        print(f"\n--- epsilon = {eps:.0e} ---")
-        thr = compute_threshold(vertices, epsilon=eps, tol=1e-6)
-        thresholds.append(thr)
-        print(f"Threshold = {thr:.6f}")
-    print("\n" + "="*70)
-    print("Results summary:")
-    for eps, thr in zip(epsilons, thresholds):
-        print(f"epsilon = {eps:.0e} : threshold = {thr:.6f}")
-    print("Theoretical exact BSEP bound = 0.42857")
+    print("Fixed polytope BSEP hierarchy (100 vertices, SCS, epsilon=1e-3)")
+    vertices = fibonacci_vertices(100)
+    print(f"Vertices: {len(vertices)}")
+    thr = compute_threshold(vertices, epsilon=1e-3)
+    print(f"Estimated threshold: {thr:.6f}")
+    print("Theoretical exact BSEP bound: 0.42857")
