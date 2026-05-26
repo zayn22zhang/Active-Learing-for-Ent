@@ -1,3 +1,5 @@
+这里是验证Oracle的准确性，Ohst论文的准确性是0.42857
+
 import numpy as np
 import cvxpy as cp
 from scipy.linalg import eigh
