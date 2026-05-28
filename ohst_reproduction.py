@@ -1,6 +1,5 @@
-# ============================================
-Reproduction of:
-Ohst et al. (2024)
+"""
+Reproduction of Ohst et al. (2024).
 
 Features:
 - BSEP hierarchy
@@ -12,7 +11,7 @@ Features:
 
 Status:
 Frozen reproducibility version (v1.0)
-# ============================================
+"""
 
 import argparse
 import csv
