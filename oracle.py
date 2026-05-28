@@ -107,11 +107,40 @@ class EntanglementOracle:
     # Public API
     # ------------------------------------------------------------------
     def classify(self, rho: np.ndarray, mode: str = "three_qubit") -> OracleResult:
+        if mode in ("two_qubit", "2qubit", "2x2"):
+            return self.classify_two_qubit(rho)
         if mode in ("three_qubit", "gme", "bsep"):
             return self.classify_three_qubit(rho)
         if mode in ("bipartite_2x4", "2x4"):
             return self.classify_bipartite_2x4(rho)
         raise ValueError(f"Unknown oracle mode: {mode}")
+
+    def classify_two_qubit(self, rho: np.ndarray) -> OracleResult:
+        """Classify a two-qubit state. PPT is exact for C^2 tensor C^2."""
+        rho = self._validated_density_matrix(rho, dim=4)
+        min_pt = self.ppt_min_eigenvalue_bipartite(rho, dims=(2, 2), subsystem=0)
+        diagnostics = {
+            "mode": "two_qubit_ppt_exact_oracle",
+            "ppt_min_eigenvalue_A": min_pt,
+            "theorem": "PPT is necessary and sufficient for separability in 2x2.",
+        }
+        if min_pt < -self.ppt_tol:
+            return OracleResult(
+                label="entangled_certified_by_2qubit_npt",
+                oracle_label=1,
+                is_entangled=True,
+                is_gme=None,
+                certificate="negative_partial_transpose",
+                diagnostics=diagnostics,
+            )
+        return OracleResult(
+            label="separable_certified_by_2qubit_ppt",
+            oracle_label=0,
+            is_entangled=False,
+            is_gme=None,
+            certificate="two_qubit_ppt_separability",
+            diagnostics=diagnostics,
+        )
 
     def classify_three_qubit(self, rho: np.ndarray) -> OracleResult:
         """Classify an 8x8 state as a three-qubit GME/BSEP oracle task.
