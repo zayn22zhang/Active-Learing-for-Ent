@@ -36,13 +36,22 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 
-from ohst_reproduction import (
-    BipartiteSeparableHierarchy,
-    BlochPolytope,
-    BSEPHierarchy,
-    WitnessExtractor,
-    partial_transpose_8x8_np,
-)
+try:
+    from .ohst_reproduction import (
+        BipartiteSeparableHierarchy,
+        BlochPolytope,
+        BSEPHierarchy,
+        WitnessExtractor,
+        partial_transpose_8x8_np,
+    )
+except ImportError:
+    from ohst_reproduction import (
+        BipartiteSeparableHierarchy,
+        BlochPolytope,
+        BSEPHierarchy,
+        WitnessExtractor,
+        partial_transpose_8x8_np,
+    )
 
 
 @dataclass
