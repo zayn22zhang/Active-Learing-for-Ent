@@ -9,7 +9,7 @@ reusable Ohst-style oracle.
   - 2 qubits: exact PPT separability oracle.
   - 3 qubits: Ohst-style BSEP/GME hierarchy oracle.
   - 2 x 4: bipartite validation oracle.
-- `ohst_reproduction.py`: frozen Ohst et al. 2024 hierarchy reproduction.
+- `benchmark.py`: Ohst et al. 2024 oracle reproduction.
 - `NN for Fei:DeepSemi-supervised`: Fei-style neural-network active learning
   script, now backed by `oracle.py`.
 - `test.py`: same active-learning script with a `.py` extension for easier
