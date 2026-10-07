@@ -10,3 +10,12 @@ build/
 .venv/
 venv/
 *.csv
+
+
+# Generated experiment outputs (keep curated validation CSVs).
+/results/
+**/oracle_cache/
+*.pt
+*.joblib
+*.npz
+!validation/**/*.csv

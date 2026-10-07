@@ -1,0 +1,98 @@
+[
+  {
+    "strategy": "random",
+    "train_queries": 20,
+    "seeds": 3,
+    "mae_mean": 0.10193049601560615,
+    "mae_std": 0.016954781686222383,
+    "rmse_mean": 0.13063950649281475
+  },
+  {
+    "strategy": "random",
+    "train_queries": 30,
+    "seeds": 3,
+    "mae_mean": 0.09292927355264996,
+    "mae_std": 0.008417495648377259,
+    "rmse_mean": 0.12535040131467884
+  },
+  {
+    "strategy": "random",
+    "train_queries": 40,
+    "seeds": 3,
+    "mae_mean": 0.08877116762669407,
+    "mae_std": 0.003073208241092605,
+    "rmse_mean": 0.12831155938592045
+  },
+  {
+    "strategy": "random",
+    "train_queries": 50,
+    "seeds": 3,
+    "mae_mean": 0.08034140821724366,
+    "mae_std": 0.00436010544992384,
+    "rmse_mean": 0.11509591801726791
+  },
+  {
+    "strategy": "uncertainty",
+    "train_queries": 20,
+    "seeds": 3,
+    "mae_mean": 0.10193049601560615,
+    "mae_std": 0.016954781686222383,
+    "rmse_mean": 0.13063950649281475
+  },
+  {
+    "strategy": "uncertainty",
+    "train_queries": 30,
+    "seeds": 3,
+    "mae_mean": 0.09046197969996626,
+    "mae_std": 0.002904963951504964,
+    "rmse_mean": 0.12425804156271886
+  },
+  {
+    "strategy": "uncertainty",
+    "train_queries": 40,
+    "seeds": 3,
+    "mae_mean": 0.0851010047659484,
+    "mae_std": 0.009080628380639286,
+    "rmse_mean": 0.112875531825721
+  },
+  {
+    "strategy": "uncertainty",
+    "train_queries": 50,
+    "seeds": 3,
+    "mae_mean": 0.08518040866811255,
+    "mae_std": 0.007504275809330701,
+    "rmse_mean": 0.10939097602493038
+  },
+  {
+    "strategy": "boundary",
+    "train_queries": 20,
+    "seeds": 3,
+    "mae_mean": 0.10193049601560615,
+    "mae_std": 0.016954781686222383,
+    "rmse_mean": 0.13063950649281475
+  },
+  {
+    "strategy": "boundary",
+    "train_queries": 30,
+    "seeds": 3,
+    "mae_mean": 0.09231125607900235,
+    "mae_std": 0.011999414149621735,
+    "rmse_mean": 0.12449899037791913
+  },
+  {
+    "strategy": "boundary",
+    "train_queries": 40,
+    "seeds": 3,
+    "mae_mean": 0.08548141768526978,
+    "mae_std": 0.00917052476984457,
+    "rmse_mean": 0.11911331977853379
+  },
+  {
+    "strategy": "boundary",
+    "train_queries": 50,
+    "seeds": 3,
+    "mae_mean": 0.08127808903136666,
+    "mae_std": 0.006961290497864524,
+    "rmse_mean": 0.1161835577806986
+  }
+]

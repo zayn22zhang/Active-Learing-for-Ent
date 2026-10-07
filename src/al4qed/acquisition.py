@@ -1,115 +1,80 @@
-# acquisition.py (新文件)
-
-"""
-主动学习采集策略：选择信息量最大的未标注样本
-"""
-
+"""Batched acquisition. 'boundary' targets a numerical visibility level, not SEP."""
 import numpy as np
-from typing import List, Tuple, Optional
 
 
-def random_acquisition(model, unlabeled_pool, n_queries, **kwargs):
-    """基线策略：随机采样"""
-    indices = np.random.choice(len(unlabeled_pool), n_queries, replace=False)
-    return indices, [1.0] * n_queries
+def _count(pool, n):
+    if int(n) != n or n < 0:
+        raise ValueError('n_queries must be a nonnegative integer')
+    return min(int(n), len(pool))
 
 
-def uncertainty_acquisition(model, unlabeled_pool, n_queries, n_mc_samples=20, **kwargs):
-    """不确定性采样：选择模型最不确定的样本"""
-    uncertainties = []
-    for item in unlabeled_pool:
-        _, std = model.predict_uncertainty(item['features'], n_mc_samples)
-        uncertainties.append(std)
-    
-    indices = np.argsort(uncertainties)[-n_queries:]
-    scores = [uncertainties[i] for i in indices]
-    return indices, scores
+def _top(scores, count):
+    if count == 0:
+        return np.array([], dtype=int), []
+    scores = np.asarray(scores, dtype=float)
+    if not np.isfinite(scores).all():
+        raise ValueError('Nonfinite acquisition score')
+    indices = np.argsort(-scores, kind='stable')[:count]
+    return indices, scores[indices].tolist()
 
 
-def boundary_acquisition(model, unlabeled_pool, n_queries, 
-                         threshold=0.99, n_mc_samples=20, 
-                         beta=1.0, **kwargs):
-    """
-    边界聚焦采样：选择靠近分类边界且不确定性高的样本
-    
-    核心公式: score = uncertainty / (|χ - threshold| + ε) ^ β
-    
-    其中:
-    - uncertainty: MC Dropout标准差
-    - |χ - threshold|: 到边界的距离
-    - β: 边界聚焦强度 (β越大越聚焦边界)
-    """
-    scores = []
-    for item in unlabeled_pool:
-        chi_mean, chi_std = model.predict_uncertainty(item['features'], n_mc_samples)
-        boundary_dist = np.abs(chi_mean - threshold)
-        
-        # 信息量评分：不确定性高 + 靠近边界
-        info_score = chi_std / (boundary_dist + 1e-6) ** beta
-        scores.append(info_score)
-    
-    indices = np.argsort(scores)[-n_queries:]
-    return indices, [scores[i] for i in indices]
+def random_acquisition(learner, unlabeled_pool, n_queries, **kwargs):
+    n = _count(unlabeled_pool, n_queries)
+    indices = learner.rng.choice(len(unlabeled_pool), n, replace=False)
+    return indices, np.ones(n).tolist()
 
 
-def margin_acquisition(model, unlabeled_pool, n_queries, 
-                       threshold=0.99, n_mc_samples=20, **kwargs):
-    """
-    边界裕度采样：选择预测值最接近阈值的样本
-    
-    这是边界聚焦的简化版本，只考虑预测值位置
-    """
-    boundary_dists = []
-    for item in unlabeled_pool:
-        chi_mean, _ = model.predict_uncertainty(item['features'], n_mc_samples)
-        boundary_dists.append(np.abs(chi_mean - threshold))
-    
-    indices = np.argsort(boundary_dists)[:n_queries]
-    return indices, [boundary_dists[i] for i in indices]
+def _pred(learner, pool, n_mc_samples):
+    return learner.predict_uncertainty_batch(np.asarray([x['features'] for x in pool]), n_mc_samples)
 
 
-def hybrid_acquisition(model, unlabeled_pool, n_queries, 
-                       threshold=0.99, n_mc_samples=20,
-                       uncertainty_weight=0.5, **kwargs):
-    """
-    混合策略：平衡探索（高不确定性）和开发（边界附近）
-    
-    score = w * uncertainty_norm + (1-w) * (1 - boundary_dist_norm)
-    """
-    uncertainties = []
-    boundary_dists = []
-    
-    for item in unlabeled_pool:
-        chi_mean, chi_std = model.predict_uncertainty(item['features'], n_mc_samples)
-        uncertainties.append(chi_std)
-        boundary_dists.append(np.abs(chi_mean - threshold))
-    
-    # 归一化
-    uncertainties = np.array(uncertainties)
-    boundary_dists = np.array(boundary_dists)
-    
-    u_norm = (uncertainties - uncertainties.min()) / (uncertainties.max() - uncertainties.min() + 1e-6)
-    b_norm = (boundary_dists - boundary_dists.min()) / (boundary_dists.max() - boundary_dists.min() + 1e-6)
-    
-    # 组合分数：高不确定性 + 低边界距离
-    scores = uncertainty_weight * u_norm + (1 - uncertainty_weight) * (1 - b_norm)
-    
-    indices = np.argsort(scores)[-n_queries:]
-    return indices, [scores[i] for i in indices]
+def uncertainty_acquisition(learner, unlabeled_pool, n_queries, n_mc_samples=20, **kwargs):
+    count = _count(unlabeled_pool, n_queries)
+    if count == 0:
+        return _top([], 0)
+    _, std = _pred(learner, unlabeled_pool, n_mc_samples)
+    return _top(std, count)
 
 
-# 采集策略注册表
-ACQUISITION_STRATEGIES = {
-    'random': random_acquisition,
-    'uncertainty': uncertainty_acquisition,
-    'boundary': boundary_acquisition,
-    'margin': margin_acquisition,
-    'hybrid': hybrid_acquisition,
-}
+def boundary_acquisition(learner, unlabeled_pool, n_queries, threshold=0.99,
+                         n_mc_samples=20, beta=1.0, **kwargs):
+    count = _count(unlabeled_pool, n_queries)
+    if count == 0:
+        return _top([], 0)
+    mean, std = _pred(learner, unlabeled_pool, n_mc_samples)
+    # Bounded denominator avoids one near-threshold point dominating by 1e6.
+    scores = std / (np.abs(mean-threshold)+0.02)**beta
+    return _top(scores, count)
+
+
+def margin_acquisition(learner, unlabeled_pool, n_queries, threshold=0.99, **kwargs):
+    count = _count(unlabeled_pool, n_queries)
+    if count == 0:
+        return _top([], 0)
+    mean = learner.predict_chi_batch(np.asarray([x['features'] for x in unlabeled_pool]))
+    return _top(-np.abs(mean-threshold), count)
+
+
+def hybrid_acquisition(learner, unlabeled_pool, n_queries, threshold=0.99,
+                       n_mc_samples=20, uncertainty_weight=0.5, **kwargs):
+    count = _count(unlabeled_pool, n_queries)
+    if count == 0:
+        return _top([], 0)
+    if not 0 <= uncertainty_weight <= 1:
+        raise ValueError('uncertainty_weight must be in [0,1]')
+    mean, std = _pred(learner, unlabeled_pool, n_mc_samples)
+    dist = np.abs(mean-threshold)
+    u = (std-std.min())/(np.ptp(std)+1e-12)
+    b = (dist-dist.min())/(np.ptp(dist)+1e-12)
+    return _top(uncertainty_weight*u+(1-uncertainty_weight)*(1-b), count)
+
+
+ACQUISITION_STRATEGIES = dict(random=random_acquisition, uncertainty=uncertainty_acquisition,
+                            boundary=boundary_acquisition, margin=margin_acquisition,
+                            hybrid=hybrid_acquisition)
 
 
 def get_acquisition_strategy(name):
-    """获取采集策略函数"""
     if name not in ACQUISITION_STRATEGIES:
-        raise ValueError(f"Unknown strategy: {name}. Choose from {list(ACQUISITION_STRATEGIES.keys())}")
+        raise ValueError(f'Unknown strategy {name}; choose {list(ACQUISITION_STRATEGIES)}')
     return ACQUISITION_STRATEGIES[name]

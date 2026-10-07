@@ -1,0 +1,16 @@
+{
+  "dims": [
+    2,
+    2
+  ],
+  "N": 12,
+  "max_iter": 2,
+  "seed": 42,
+  "solver": "SCS",
+  "upstream_commit": "035d401fc239339ae95104170ce15c60dbe26567",
+  "chi": 0.3333333366681221,
+  "expected": 0.3333333333333333,
+  "residual": 3.4081156488518793e-10,
+  "upstream_chi": 0.33333333599638715,
+  "live_execution": true
+}

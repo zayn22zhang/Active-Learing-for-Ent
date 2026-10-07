@@ -1,0 +1,18 @@
+[
+  {
+    "strategy": "uncertainty",
+    "train_queries": 6,
+    "seeds": 1,
+    "mae_mean": 0.06905199432130071,
+    "mae_std": 0.0,
+    "rmse_mean": 0.07090930829924684
+  },
+  {
+    "strategy": "uncertainty",
+    "train_queries": 8,
+    "seeds": 1,
+    "mae_mean": 0.06462780976052496,
+    "mae_std": 0.0,
+    "rmse_mean": 0.06875756846725374
+  }
+]

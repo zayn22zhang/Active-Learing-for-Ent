@@ -1,0 +1,14 @@
+{
+  "test_backend_calls": 4,
+  "test_cache_hits": 0,
+  "runs": [
+    {
+      "seed": 0,
+      "strategy": "uncertainty",
+      "initial_and_val_calls": 9,
+      "active_calls": 2,
+      "active_cache_hits": 0
+    }
+  ],
+  "note": "Setup costs shared across strategies; do not sum repeated initial_and_val_calls. Logical budgets include cached labels."
+}

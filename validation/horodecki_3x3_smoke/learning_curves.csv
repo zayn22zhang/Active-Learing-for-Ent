@@ -1,0 +1,3 @@
+seed,model,strategy,cycle,train_queries,validation_queries,test_queries,total_logical_queries,mse,mae,rmse,r2,near_level_mae,near_level_count,queried_backend_calls,queried_cache_hits,seconds,queried_oracle_seconds,model_trained_on
+0,nn,uncertainty,0,6,3,4,13,0.005028130003477637,0.06905199432130071,0.07090930829924684,-2.3923783706746535,0.09625221495849146,1,0,0,3.2830284910000955,0.0,6
+0,nn,uncertainty,1,8,3,4,15,0.004727603221529085,0.06462780976052496,0.06875756846725374,-2.189618984146143,0.07819796805602564,1,2,0,16.025334791999967,12.706350526000051,8

@@ -1,0 +1,68 @@
+{
+  "mode": "compare",
+  "model": "nn",
+  "strategy": "uncertainty",
+  "strategies": [
+    "random",
+    "uncertainty",
+    "boundary"
+  ],
+  "backend": "ppt",
+  "external": null,
+  "backend_version": null,
+  "dims": [
+    2,
+    2
+  ],
+  "distribution": "mixed",
+  "initial": 20,
+  "pool": 40,
+  "cycles": 2,
+  "queries": 8,
+  "epochs": 35,
+  "test": 80,
+  "val": 20,
+  "patience": 15,
+  "batch_size": 32,
+  "mc_samples": 20,
+  "oracle_N": 100,
+  "oracle_iters": 10,
+  "oracle_seed": 914,
+  "test_seed": 812739,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "threshold": 0.99,
+  "device": "cpu",
+  "output": "al4qed_improved/results/mlp_verified",
+  "cache": null,
+  "no_plot": false,
+  "feature_version": "density-local-spectra-v2",
+  "target": "min(1, backend visibility); lower estimate unless exact backend",
+  "protocol": "frozen val/test, paired initial/pool, cold refit each cycle",
+  "versions": {
+    "numpy": "2.3.5",
+    "scipy": "1.17.0",
+    "scikit-learn": "1.8.0",
+    "torch": "2.14.1",
+    "cvxpy": "1.9.3"
+  },
+  "source_sha256": {
+    "oracle.py": "af6d71833ccbc9feafc858a025ded2c0256af217af07a53906823dcbb5433e56",
+    "benchmarks.py": "aa1577cb70a09fc7d8e774c6d7e380057a67cfd45527034d3b2bf37f9635d43b",
+    "network.py": "fbb03dd77912ffd8520e687f4ea1650788b5c03ff0925113b16fd11b4eb07798",
+    "states.py": "e1796a97897309b8b146c8db254f7019a6fab8262e14262f9eaf9edb76dc49a5",
+    "test.py": "52ee6ac6a455a50270f6b3e5051e51eaa3e8ffab132e418fdfa5ee6da39b80d1",
+    "setup_ohst.py": "4ab05721e4196ed9f304aba40018ddc36c020fccf3f73ff8a969e5f149d70c2d",
+    "ohst_reproduction.py": "bd25d8723d7971cb5d3fc3f575e6f50d04ff5f36a6692947d5b232639af0b5ba",
+    "adaptive.py": "e46041158079761bf84dbf7a15763709cb1b2240efd9494a327468452de9b51b",
+    "train.py": "38ce2fc8b358e310fc5b339c494c7820a79161781af45a07e937e7b4866a67a1",
+    "__init__.py": "6f780bf21545bf774b98f51e91f0fad7eb765302bbc32fffd6aab7bb5a9042cb",
+    "dataset.py": "3ee4affd824b740bf233ba7c731712f0e9aff833422148a91662edef3ec16ba0",
+    "acquisition.py": "9c4919f8acbe9545dad2e13b6a80d954eadd7ece7c4ae7cc37520c776f0ce4bf",
+    "active_learning.py": "03a5bfd1ef4b45cdaaabb7d3bc12d06b68b141b6f1175872d825fe77ff542bff",
+    "ohst_bridge.py": "215abebfe7a0c37a8ae1657e701aa111c0ec139f9257e810ded0fade912ab63b"
+  }
+}

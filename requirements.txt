@@ -1,6 +1,2 @@
-numpy
-scipy
-cvxpy
-matplotlib
-scikit-learn
-mosek
+-e .[ml,dev]
+# Optional: pip install mosek for the legacy reproduction script / MOSEK solver.

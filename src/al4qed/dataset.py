@@ -1,155 +1,124 @@
-"""
-Dataset generator using Adaptive Polytope Oracle.
-Generates (features, chi) pairs for training neural networks.
-"""
-
+"""Physical density matrices and dimension-aware, deterministic features."""
+from pathlib import Path
 import numpy as np
-from tqdm import tqdm
-from oracle import AdaptivePolytopeOracle
-from states import horodecki_3x3, werner_state, isotropic_state
+try:
+    from .states import horodecki_3x3, werner_state, isotropic_state
+except ImportError:
+    from states import horodecki_3x3, werner_state, isotropic_state
+
+FEATURE_VERSION = 'density-local-spectra-v2'
 
 
-def random_density_matrix(d, rng=None):
-    """Generate random density matrix via Ginibre ensemble."""
-    if rng is None:
-        rng = np.random.default_rng()
-    G = rng.standard_normal((d, d)) + 1j * rng.standard_normal((d, d))
-    rho = G @ G.conj().T
-    return rho / np.trace(rho)
+def validate_density(rho, dims=None, tol=1e-8):
+    rho = np.asarray(rho, dtype=np.complex128)
+    if rho.ndim != 2 or rho.shape[0] != rho.shape[1]:
+        raise ValueError('rho must be a square matrix')
+    if dims is not None and (len(dims) != 2 or any(int(d) != d or d < 2 for d in dims)
+                             or np.prod(dims) != rho.shape[0]):
+        raise ValueError('dims must be two local dimensions >=2 matching rho')
+    if not np.isfinite(rho).all() or not np.allclose(rho, rho.conj().T, atol=tol, rtol=0):
+        raise ValueError('rho must be finite and Hermitian')
+    if abs(np.trace(rho) - 1) > tol or np.linalg.eigvalsh(rho).min() < -tol:
+        raise ValueError('rho must be positive semidefinite with trace one')
+    return rho
 
 
-def extract_features_advanced(rho):
-    """
-    Extract rich features from density matrix for ML input.
-    
-    Features:
-    - Flattened real and imag parts (2*d^2 dimensions)
-    - Eigenvalues of rho (d dimensions)
-    - Purity = Tr(ρ²) (1 dimension)
-    - Local eigenvalues (reduced density matrices) (dA + dB dimensions)
-    
-    Returns feature vector of dimension: 2*d^2 + d + 1 + dA + dB
-    """
-    d = rho.shape[0]
-    dA = int(np.sqrt(d))  # Assumes dA = dB for simplicity
-    dB = dA
-    
-    # 1. Flattened real and imag
-    flat = rho.flatten()
-    features = list(np.real(flat)) + list(np.imag(flat))
-    
-    # 2. Eigenvalues of rho
-    eigs = np.linalg.eigvalsh(rho)
-    features.extend(eigs)
-    
-    # 3. Purity = Tr(ρ²)
-    purity = np.real(np.trace(rho @ rho))
-    features.append(purity)
-    
-    # 4. Reduced density matrices eigenvalues
-    # Reshape to get partial trace
-    rho_reshaped = rho.reshape(dA, dB, dA, dB)
-    
-    # Reduced on A: trace over B
-    rho_A = np.einsum('ijik', rho_reshaped).reshape(dA, dA)
-    rho_A = rho_A / np.trace(rho_A)
-    eigs_A = np.linalg.eigvalsh(rho_A)
-    features.extend(eigs_A)
-    
-    # Reduced on B: trace over A
-    rho_B = np.einsum('ijki', rho_reshaped).reshape(dB, dB)
-    rho_B = rho_B / np.trace(rho_B)
-    eigs_B = np.linalg.eigvalsh(rho_B)
-    features.extend(eigs_B)
-    
-    return np.array(features, dtype=np.float32)
+def resolve_dims(rho, dims=None):
+    if dims is None:
+        side = int(np.sqrt(len(rho)))
+        if side * side != len(rho):
+            raise ValueError('Non-square bipartitions require explicit dims=(dA,dB)')
+        dims = (side, side)
+    if np.prod(dims) != len(rho) or len(dims) != 2:
+        raise ValueError('dims do not match rho')
+    return tuple(dims)
+
+
+def reduced_states(rho, dims=None):
+    dA, dB = resolve_dims(rho, dims)
+    tensor = np.asarray(rho).reshape(dA, dB, dA, dB)
+    return np.trace(tensor, axis1=1, axis2=3), np.trace(tensor, axis1=0, axis2=2)
 
 
 def extract_features_simple(rho):
-    """Simple feature extraction: flattened real + imag only."""
-    flat = rho.flatten()
-    features = np.concatenate([np.real(flat), np.imag(flat)])
-    return features.astype(np.float32)
+    flat = np.asarray(rho).reshape(-1)
+    return np.concatenate((flat.real, flat.imag)).astype(np.float32)
 
 
-def generate_dataset(oracle, state_generator, n_samples, dims=(3, 3), 
-                     feature_fn=extract_features_advanced,
-                     save_path=None, seed=42):
-    """
-    Generate dataset of (features, chi) pairs.
-    
-    Parameters
-    ----------
-    oracle : AdaptivePolytopeOracle
-    state_generator : callable or list of callables
-        Function that returns a density matrix, or list of family names
-    n_samples : int
-        Number of samples to generate
-    dims : tuple
-        (dA, dB) dimensions
-    feature_fn : callable
-        Function to extract features from density matrix
-    save_path : str or None
-        Path to save numpy arrays
-    
-    Returns
-    -------
-    X : np.ndarray, shape (n_samples, feature_dim)
-    y : np.ndarray, shape (n_samples,)
-    """
+def extract_features_advanced(rho, dims=None):
+    """2D²+D+1+dA+dB features; preserves the original feature length for 3x3."""
+    rho = validate_density(rho, dims)
+    a, b = reduced_states(rho, dims)
+    return np.concatenate((extract_features_simple(rho), np.linalg.eigvalsh(rho),
+                           [np.trace(rho @ rho).real], np.linalg.eigvalsh(a),
+                           np.linalg.eigvalsh(b))).astype(np.float32)
+
+
+def random_density_matrix(d, rng=None):
+    rng = np.random.default_rng() if rng is None else rng
+    g = rng.normal(size=(d, d)) + 1j * rng.normal(size=(d, d))
+    rho = g @ g.conj().T
+    return rho / np.trace(rho)
+
+
+def sample_state(dims, rng, distribution='mixed'):
+    """Mixed distribution broadens visibility coverage; no hidden label queries."""
+    dA, dB = dims
+    if distribution == 'ginibre':
+        return random_density_matrix(dA*dB, rng)
+    if distribution == 'horodecki':
+        if dims != (3, 3):
+            raise ValueError('Horodecki family requires dims=(3,3)')
+        return horodecki_3x3(rng.uniform())
+    if distribution != 'mixed':
+        raise ValueError(f'Unknown distribution: {distribution}')
+    branch = rng.integers(3)
+    if branch == 0:
+        return random_density_matrix(dA*dB, rng)
+    if branch == 1:
+        # Convex combinations of product states are physically separable.
+        weights = rng.dirichlet(np.ones(4))
+        return sum(w * np.kron(random_density_matrix(dA, rng), random_density_matrix(dB, rng))
+                   for w in weights)
+    v = rng.normal(size=dA*dB) + 1j*rng.normal(size=dA*dB)
+    v /= np.linalg.norm(v)
+    p = rng.uniform()
+    return p*np.outer(v, v.conj()) + (1-p)*np.eye(dA*dB)/(dA*dB)
+
+
+def generate_dataset(oracle, state_generator, n_samples, dims=(3,3),
+                     feature_fn=extract_features_advanced, save_path=None, seed=42):
+    dims = tuple(dims)
+    if n_samples < 1:
+        raise ValueError('n_samples must be positive')
     rng = np.random.default_rng(seed)
-    d_total = dims[0] * dims[1]
-    
-    # First generate a sample to get feature dimension
-    test_rho = random_density_matrix(d_total, rng)
-    feature_dim = len(feature_fn(test_rho))
-    
-    X = np.zeros((n_samples, feature_dim), dtype=np.float32)
-    y = np.zeros(n_samples, dtype=np.float32)
-    
-    print(f"Generating {n_samples} samples with Oracle...")
-    print(f"  Feature dimension: {feature_dim}")
-    
-    for i in tqdm(range(n_samples)):
-        # Generate random state
+    X, y = [], []
+    for _ in range(n_samples):
         if callable(state_generator):
-            # FIXED: pass d_total, not dims[0]
-            rho = state_generator(d_total, rng=rng)
+            rho = state_generator(np.prod(dims), rng=rng)
         else:
-            # state_generator is a list of family names
             family = rng.choice(state_generator)
             if family == 'horodecki':
-                a = rng.uniform(0.2, 1.0)
-                rho = horodecki_3x3(a)
-            elif family == 'werner':
-                p = rng.uniform(0, 1)
-                rho = werner_state(p, d=2)  # 2x2 only
-            elif family == 'isotropic':
-                p = rng.uniform(0, 1)
-                rho = isotropic_state(p, d=2)
+                rho = sample_state(tuple(dims), rng, 'horodecki')
+            elif family in ('werner', 'isotropic'):
+                if dims[0] != dims[1] or (family == 'werner' and dims != (2,2)):
+                    raise ValueError(f'{family} incompatible with dims={dims}')
+                fn = werner_state if family == 'werner' else isotropic_state
+                rho = fn(rng.uniform(), d=dims[0])
+            elif family == 'random':
+                rho = random_density_matrix(np.prod(dims), rng)
             else:
-                rho = random_density_matrix(d_total, rng)
-        
-        # Query oracle to get χ
-        result = oracle.query(rho, dims[0], dims[1])
+                raise ValueError(f'Unknown family: {family}')
+        validate_density(rho, dims)
+        result = oracle.query(rho, *dims)
         chi = result['chi']
-        
-        # Extract features
-        X[i] = feature_fn(rho)
-        y[i] = chi
-    
+        if not np.isfinite(chi):
+            raise RuntimeError('Oracle returned a nonfinite training target')
+        X.append(feature_fn(rho, dims=dims) if feature_fn is extract_features_advanced else feature_fn(rho))
+        y.append(chi)
+    X, y = np.asarray(X, dtype=np.float32), np.asarray(y, dtype=np.float32)
     if save_path:
-        np.save(f"{save_path}_X.npy", X)
-        np.save(f"{save_path}_y.npy", y)
-        print(f"Saved to {save_path}_X.npy and {save_path}_y.npy")
-    
+        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+        np.save(f'{save_path}_X.npy', X)
+        np.save(f'{save_path}_y.npy', y)
     return X, y
-
-
-if __name__ == "__main__":
-    from oracle import AdaptivePolytopeOracle
-    
-    oracle = AdaptivePolytopeOracle(N=100, max_iter=10)
-    X, y = generate_dataset(oracle, random_density_matrix, n_samples=100, dims=(3, 3))
-    print(f"X shape: {X.shape}, y shape: {y.shape}")
-    print(f"y range: [{y.min():.3f}, {y.max():.3f}]")

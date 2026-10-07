@@ -1,0 +1,8 @@
+{
+  "repository": "https://gitlab.com/tqo/quantum-correlations",
+  "commit": "035d401fc239339ae95104170ce15c60dbe26567",
+  "kvant_commit": "44caf9384075b5db3f3b8efe1e469947f4a08287",
+  "entrypoint": "src/entanglement/EntanglementWithBlochPolytope.jl:RobustnessToSeparabilityByBlochPolytope",
+  "source_sha256": "92a3b220bb4fc3968d81b1643ade5f0982157de373281cb6d7816fda8fd679dc",
+  "note": "Upstream is not redistributed. setup_ohst.py retrieves pinned sources."
+}

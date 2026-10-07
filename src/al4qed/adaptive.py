@@ -35,7 +35,19 @@ def random_inner_polytope(d, N, rng=None):
     """Random inner polytope of Bloch sphere using pure states."""
     if rng is None:
         rng = np.random.default_rng()
-    return [random_pure_state(d, rng) for _ in range(N)]
+    if N < d:
+        raise ValueError('N must be at least the local dimension')
+    # Include a basis simplex so I/d is always in the initial polytope.
+    basis = [np.diag(np.eye(d)[i]).astype(complex) for i in range(d)]
+    vertices = basis[:]
+    # Whole orthonormal bases put I/d in each block's convex hull.
+    # This avoids an initial polytope that touches I/d only on one face.
+    while len(vertices)+d <= N:
+        g = rng.normal(size=(d,d)) + 1j*rng.normal(size=(d,d))
+        q,_ = np.linalg.qr(g)
+        vertices.extend(np.outer(q[:,i],q[:,i].conj()) for i in range(d))
+    vertices.extend(random_pure_state(d,rng) for _ in range(N-len(vertices)))
+    return vertices
 
 
 def bipartite_visibility_sdp(rho_AB, polytope_A, dB, verbose=False):
@@ -63,18 +75,32 @@ def bipartite_visibility_sdp(rho_AB, polytope_A, dB, verbose=False):
 
     prob = cp.Problem(cp.Maximize(t), constraints)
 
-    try:
-        prob.solve(solver=cp.MOSEK, verbose=verbose)
-    except:
-        prob.solve(solver=cp.SCS, verbose=verbose, eps=1e-6, max_iters=20000)
-
-    if prob.status in ['optimal', 'optimal_inaccurate']:
-        chi_val = float(t.value) if t.value is not None else 0.0
-        tau_vals = [tau[lam].value if tau[lam].value is not None else np.zeros((dB, dB), dtype=complex)
-                    for lam in range(N)]
-        return chi_val, tau_vals
-    else:
-        return 0.0, [np.eye(dB, dtype=complex) / dB for _ in range(N)]
+    installed = cp.installed_solvers()
+    failures = []
+    for solver in (cp.MOSEK, cp.CLARABEL, cp.SCS):
+        if solver not in installed:
+            continue
+        try:
+            options = dict(eps=1e-7, max_iters=50000) if solver == cp.SCS else {}
+            prob.solve(solver=solver, verbose=verbose, **options)
+        except cp.error.SolverError as exc:
+            failures.append(f'{solver}: {exc}')
+            continue
+        if prob.status != cp.OPTIMAL or t.value is None or any(x.value is None for x in tau):
+            failures.append(f'{solver}: {prob.status}')
+            continue
+        value = float(t.value)
+        values = [x.value for x in tau]
+        reconstructed = sum(np.kron(a,b) for a,b in zip(polytope_A, values))
+        target = value*rho_AB + (1-value)*np.eye(d)/d
+        residual = np.linalg.norm(target-reconstructed, 'fro')
+        min_eig = min(np.linalg.eigvalsh((x+x.conj().T)/2).min() for x in values)
+        if (not np.isfinite(value) or not np.isfinite(residual) or not np.isfinite(min_eig)
+                or value < -1e-6 or value > 1+1e-6 or residual > 1e-5 or min_eig < -1e-6):
+            failures.append(f'{solver}: residual={residual}, min_eig={min_eig}')
+            continue
+        return float(np.clip(value, 0, 1)), values
+    raise RuntimeError('No solver returned a validated optimal solution: '+'; '.join(failures))
 
 
 def normalise_tau(tau_list):
@@ -83,7 +109,10 @@ def normalise_tau(tau_list):
     for tau in tau_list:
         tr = np.real(np.trace(tau))
         if tr > 1e-9:
-            polytope.append(tau / tr)
+            eigenvalues, eigenvectors = np.linalg.eigh((tau+tau.conj().T)/2)
+            eigenvalues = np.maximum(eigenvalues, 0)
+            vertex = (eigenvectors * eigenvalues) @ eigenvectors.conj().T
+            polytope.append(vertex / np.trace(vertex))
         else:
             d = tau.shape[0]
             polytope.append(np.eye(d, dtype=complex) / d)
@@ -104,6 +133,9 @@ def adaptive_polytope_bipartite(rho_AB, dA, dB, N=200, max_iter=15, tol=1e-4,
     converged : bool
         True if converged before max_iter
     """
+    if max_iter < 1 or N < max(dA, dB):
+        raise ValueError('Require max_iter >=1 and N >= max(dA,dB)')
+    best_chi = 0.0
     if seed is not None:
         rng = np.random.default_rng(seed)
     else:
@@ -133,6 +165,7 @@ def adaptive_polytope_bipartite(rho_AB, dA, dB, N=200, max_iter=15, tol=1e-4,
 
         # Current visibility = χ₂ (after swap)
         chi_current = chi2
+        best_chi = max(best_chi, chi1, chi2)
         history.append(chi_current)
 
         if verbose:
@@ -145,4 +178,4 @@ def adaptive_polytope_bipartite(rho_AB, dA, dB, N=200, max_iter=15, tol=1e-4,
             break
         chi_prev = chi_current
 
-    return chi_current, history, converged
+    return best_chi, history, converged

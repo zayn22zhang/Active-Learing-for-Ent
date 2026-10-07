@@ -1,0 +1,70 @@
+{
+  "test_backend_calls": 80,
+  "test_cache_hits": 0,
+  "runs": [
+    {
+      "seed": 0,
+      "strategy": "random",
+      "initial_and_val_calls": 40,
+      "active_calls": 16,
+      "active_cache_hits": 0
+    },
+    {
+      "seed": 0,
+      "strategy": "uncertainty",
+      "initial_and_val_calls": 40,
+      "active_calls": 10,
+      "active_cache_hits": 6
+    },
+    {
+      "seed": 0,
+      "strategy": "boundary",
+      "initial_and_val_calls": 40,
+      "active_calls": 4,
+      "active_cache_hits": 12
+    },
+    {
+      "seed": 1,
+      "strategy": "random",
+      "initial_and_val_calls": 40,
+      "active_calls": 16,
+      "active_cache_hits": 0
+    },
+    {
+      "seed": 1,
+      "strategy": "uncertainty",
+      "initial_and_val_calls": 40,
+      "active_calls": 11,
+      "active_cache_hits": 5
+    },
+    {
+      "seed": 1,
+      "strategy": "boundary",
+      "initial_and_val_calls": 40,
+      "active_calls": 4,
+      "active_cache_hits": 12
+    },
+    {
+      "seed": 2,
+      "strategy": "random",
+      "initial_and_val_calls": 40,
+      "active_calls": 16,
+      "active_cache_hits": 0
+    },
+    {
+      "seed": 2,
+      "strategy": "uncertainty",
+      "initial_and_val_calls": 40,
+      "active_calls": 9,
+      "active_cache_hits": 7
+    },
+    {
+      "seed": 2,
+      "strategy": "boundary",
+      "initial_and_val_calls": 40,
+      "active_calls": 6,
+      "active_cache_hits": 10
+    }
+  ],
+  "note": "Setup costs shared across strategies; do not sum repeated initial_and_val_calls. Logical budgets include cached labels."
+}
