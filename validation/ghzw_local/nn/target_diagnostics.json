@@ -1,0 +1,12 @@
+{
+  "test_count": 40,
+  "ppt_count": 5,
+  "npt_count": 35,
+  "target_min": 0.20355390351481734,
+  "target_max": 1.0,
+  "ppt_upper_gap_mean": 0.018273505252674155,
+  "ppt_upper_gap_max": 0.12909356324294918,
+  "ppt_upper_baseline_mae": 0.018273505252674155,
+  "constant_one_baseline_mae": 0.5281981879896308,
+  "note": "PPT-minus-inner gap is not the actual oracle error; small numerical violations may occur."
+}

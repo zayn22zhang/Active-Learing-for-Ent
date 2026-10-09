@@ -1,0 +1,177 @@
+{
+  "config": {
+    "backend": "local",
+    "external": null,
+    "version": "local-validated-v5",
+    "N": 30,
+    "max_iter": 3,
+    "tol": 0.0001,
+    "certificate_tol": 1e-08,
+    "seed": 42,
+    "solver_stack": {
+      "cvxpy": "1.9.3",
+      "installed": [
+        "CLARABEL",
+        "HIGHS",
+        "OSQP",
+        "SCIPY",
+        "SCS"
+      ]
+    },
+    "schema": 2
+  },
+  "records": [
+    {
+      "p_g": 0,
+      "p_w": 0,
+      "chi": 1.0,
+      "chi_upper_ppt": 1.0,
+      "label": "UNKNOWN",
+      "evidence": "no classification certificate",
+      "min_pt_eigenvalue": 0.1111111111111111,
+      "target_kind": "inner_polytope_lower_estimate",
+      "status": "validated",
+      "history": [
+        1.0,
+        0.9999999998235592
+      ],
+      "converged": true,
+      "seed": 3804719725,
+      "backend": "local",
+      "backend_version": "local-validated-v5",
+      "N": 30,
+      "max_iter": 3,
+      "cache_hit": false,
+      "seconds": 2.503524433000166,
+      "iterations": 2
+    },
+    {
+      "p_g": 1,
+      "p_w": 0,
+      "chi": 0.22485782277886399,
+      "chi_upper_ppt": 0.24999999999999994,
+      "label": "ENTANGLED",
+      "evidence": "negative partial transpose (numerical tolerance)",
+      "min_pt_eigenvalue": -0.3333333333333334,
+      "target_kind": "inner_polytope_lower_estimate",
+      "status": "validated",
+      "history": [
+        0.21911606518877794,
+        0.2216861135076032,
+        0.22485782277886399
+      ],
+      "converged": false,
+      "seed": 3837581294,
+      "backend": "local",
+      "backend_version": "local-validated-v5",
+      "N": 30,
+      "max_iter": 3,
+      "cache_hit": false,
+      "seconds": 7.3169855690002805,
+      "iterations": 3
+    },
+    {
+      "p_g": 0,
+      "p_w": 1,
+      "chi": 0.18181818283970505,
+      "chi_upper_ppt": 0.18181818181818185,
+      "label": "ENTANGLED",
+      "evidence": "negative partial transpose (numerical tolerance)",
+      "min_pt_eigenvalue": -0.4999999999999999,
+      "target_kind": "inner_polytope_lower_estimate",
+      "status": "validated",
+      "history": [
+        0.18181818283970505,
+        0.1818181825652413
+      ],
+      "converged": true,
+      "seed": 2936095370,
+      "backend": "local",
+      "backend_version": "local-validated-v5",
+      "N": 30,
+      "max_iter": 3,
+      "cache_hit": false,
+      "seconds": 3.9290202880001743,
+      "iterations": 2
+    },
+    {
+      "p_g": 0.1,
+      "p_w": 0.1,
+      "chi": 1.0,
+      "chi_upper_ppt": 1.0,
+      "label": "UNKNOWN",
+      "evidence": "no classification certificate",
+      "min_pt_eigenvalue": 0.05555555555555555,
+      "target_kind": "inner_polytope_lower_estimate",
+      "status": "validated",
+      "history": [
+        1.0,
+        0.9999999999671892
+      ],
+      "converged": true,
+      "seed": 2928729156,
+      "backend": "local",
+      "backend_version": "local-validated-v5",
+      "N": 30,
+      "max_iter": 3,
+      "cache_hit": false,
+      "seconds": 3.405701173000125,
+      "iterations": 2
+    },
+    {
+      "p_g": 0.3,
+      "p_w": 0.3,
+      "chi": 0.6343313353808905,
+      "chi_upper_ppt": 0.6666666666666665,
+      "label": "ENTANGLED",
+      "evidence": "negative partial transpose (numerical tolerance)",
+      "min_pt_eigenvalue": -0.05555555555555562,
+      "target_kind": "inner_polytope_lower_estimate",
+      "status": "validated",
+      "history": [
+        0.4860754166221995,
+        0.5672830161831701,
+        0.6343313353808905
+      ],
+      "converged": false,
+      "seed": 1854670296,
+      "backend": "local",
+      "backend_version": "local-validated-v5",
+      "N": 30,
+      "max_iter": 3,
+      "cache_hit": false,
+      "seconds": 5.828792483999678,
+      "iterations": 3
+    },
+    {
+      "p_g": 0.6,
+      "p_w": 0.2,
+      "chi": 0.38200074771645465,
+      "chi_upper_ppt": 0.3846153846153845,
+      "label": "ENTANGLED",
+      "evidence": "negative partial transpose (numerical tolerance)",
+      "min_pt_eigenvalue": -0.17777777777777784,
+      "target_kind": "inner_polytope_lower_estimate",
+      "status": "validated",
+      "history": [
+        0.36414852264872855,
+        0.3792650949586352,
+        0.38200074771645465
+      ],
+      "converged": false,
+      "seed": 758709554,
+      "backend": "local",
+      "backend_version": "local-validated-v5",
+      "N": 30,
+      "max_iter": 3,
+      "cache_hit": false,
+      "seconds": 7.4671138319999955,
+      "iterations": 3
+    }
+  ],
+  "grid": {
+    "ppt": 149,
+    "npt": 2452,
+    "note": "Diagnostic grid is not uniform-area sampling; PPT does not imply SEP."
+  }
+}

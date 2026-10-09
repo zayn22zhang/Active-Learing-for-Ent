@@ -201,7 +201,10 @@ class ActiveLearner:
             self.query_history.append(dict(cycle=len(self.training_history), sample_id=item['sample_id'],
                                            chi=result['chi'], strategy=strategy, score=score,
                                            cache_hit=result.get('cache_hit', False),
-                                           oracle_seconds=result.get('seconds', 0)))
+                                           oracle_seconds=result.get('seconds', 0),
+                                           min_pt_eigenvalue=result.get('min_pt_eigenvalue'),
+                                           chi_upper_ppt=result.get('chi_upper_ppt'),
+                                           target_kind=result.get('target_kind')))
             self.pool = [p for p in self.pool if p is not item]
             results.append(result)
         return results

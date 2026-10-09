@@ -2,9 +2,9 @@
 from pathlib import Path
 import numpy as np
 try:
-    from .states import horodecki_3x3, werner_state, isotropic_state
+    from .states import horodecki_3x3, werner_state, isotropic_state, ghz_w_3x3
 except ImportError:
-    from states import horodecki_3x3, werner_state, isotropic_state
+    from states import horodecki_3x3, werner_state, isotropic_state, ghz_w_3x3
 
 FEATURE_VERSION = 'density-local-spectra-v2'
 
@@ -64,6 +64,11 @@ def random_density_matrix(d, rng=None):
 def sample_state(dims, rng, distribution='mixed'):
     """Mixed distribution broadens visibility coverage; no hidden label queries."""
     dA, dB = dims
+    if distribution == 'ghz_w_3x3':
+        if tuple(dims) != (3, 3):
+            raise ValueError('ghz_w_3x3 requires dims=(3,3)')
+        pg, pw, _ = rng.dirichlet(np.ones(3))
+        return ghz_w_3x3(pg, pw)
     if distribution == 'ginibre':
         return random_density_matrix(dA*dB, rng)
     if distribution == 'horodecki':

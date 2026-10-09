@@ -65,7 +65,12 @@ def _oracle(args, cache):
 
 
 def _label(oracle, states, dims):
-    return [oracle.query(rho, *dims) for rho in states]
+    records=[]
+    for i,rho in enumerate(states):
+        records.append(oracle.query(rho,*dims))
+        if (i+1)%10 == 0 or i+1 == len(states):
+            print(f'Labelled {i+1}/{len(states)} states; calls={oracle.backend_calls}, cache={oracle.cache_hits}',flush=True)
+    return records
 
 
 def run_experiment(args):
@@ -98,15 +103,35 @@ def run_experiment(args):
             config['versions'][dependency] = None
     config['source_sha256'] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                                 for p in Path(__file__).parent.glob('*.py')}
+    if args.distribution == 'ghz_w_3x3':
+        if tuple(args.dims) != (3,3):
+            raise ValueError('ghz_w_3x3 requires --dims 3 3')
+        config['state_family'] = dict(G='(00+11+22)/sqrt(3)', W='(01+10)/sqrt(2)',
+            mixture='p_g GG* + p_w WW* + (1-p_g-p_w) I9/9',
+            sampling='Dirichlet(1,1,1), uniform area on weight simplex')
     _json(output/'config.json', config)
     dims = tuple(args.dims)
     # One independently generated, frozen test set across all runs.
     test_rng = np.random.default_rng(args.test_seed)
     test_states = [sample_state(dims, test_rng, args.distribution) for _ in range(args.test)]
+    if args.distribution == 'ghz_w_3x3':
+        _json(output/'test_parameters.json', [dict(index=i,p_g=float(3*rho[0,4].real),
+            p_w=float(2*rho[1,3].real)) for i,rho in enumerate(test_states)])
     Xtest = np.asarray([extract_features_advanced(rho, dims) for rho in test_states])
     evaluation_oracle = _oracle(args, cache)
     test_records = _label(evaluation_oracle, test_states, dims)
     ytest = np.asarray([r['chi'] for r in test_records])
+    _json(output/'test_targets.json', [dict(index=i, **{k:(v.name if k=='label' else v)
+          for k,v in record.items()}) for i,record in enumerate(test_records)])
+    ppt_mask = np.asarray([r['min_pt_eigenvalue'] >= -1e-8 for r in test_records])
+    gaps = np.asarray([r['chi_upper_ppt']-r['chi'] for r in test_records])
+    _json(output/'target_diagnostics.json', dict(test_count=len(ytest),
+        ppt_count=int(ppt_mask.sum()), npt_count=int((~ppt_mask).sum()),
+        target_min=float(ytest.min()), target_max=float(ytest.max()),
+        ppt_upper_gap_mean=float(gaps.mean()), ppt_upper_gap_max=float(gaps.max()),
+        ppt_upper_baseline_mae=float(np.abs(gaps).mean()),
+        constant_one_baseline_mae=float(np.abs(1-ytest).mean()),
+        note='PPT-minus-inner gap is not the actual oracle error; small numerical violations may occur.'))
     np.savez_compressed(output/'test_set.npz', rho=test_states, X=Xtest, y=ytest,
                         labels=[r['label'].name for r in test_records])
     rows, run_accounting = [], []
@@ -150,6 +175,11 @@ def run_experiment(args):
                            r2=float(r2) if np.isfinite(r2) else None,
                            near_level_mae=float(errors[near].mean()) if near.any() else None,
                            near_level_count=int(near.sum()),
+                           train_mean_baseline_mae=float(np.abs(np.mean(learner.y_labeled)-ytest).mean()),
+                           ppt_upper_baseline_mae=float(np.abs(gaps).mean()),
+                           ppt_count=int(ppt_mask.sum()), npt_count=int((~ppt_mask).sum()),
+                           ppt_mae=float(errors[ppt_mask].mean()) if ppt_mask.any() else None,
+                           npt_mae=float(errors[~ppt_mask].mean()) if (~ppt_mask).any() else None,
                            queried_backend_calls=oracle.backend_calls, queried_cache_hits=oracle.cache_hits,
                            seconds=time.perf_counter()-start,
                            queried_oracle_seconds=oracle.elapsed_seconds,
@@ -223,7 +253,7 @@ def parser():
     p.add_argument('--external', help='Verified adapter module:function, NOT an assumed upstream API')
     p.add_argument('--backend-version', help='Upstream commit and wrapper version; required for external')
     p.add_argument('--dims', type=int, nargs=2, default=[3,3])
-    p.add_argument('--distribution', choices=['mixed','ginibre','horodecki'], default='mixed')
+    p.add_argument('--distribution', choices=['mixed','ginibre','horodecki','ghz_w_3x3'], default='mixed')
     for flag, default in [('initial',30),('pool',500),('cycles',5),('queries',15),('epochs',100),
                           ('test',200),('val',40),('patience',15),('batch-size',32),('mc-samples',20),
                           ('oracle-N',100),('oracle-iters',10),('oracle-seed',914),('test-seed',812739)]:

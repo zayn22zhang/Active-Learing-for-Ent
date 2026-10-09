@@ -1,0 +1,76 @@
+{
+  "mode": "compare",
+  "model": "rf",
+  "strategy": "uncertainty",
+  "strategies": [
+    "random",
+    "uncertainty",
+    "boundary"
+  ],
+  "backend": "local",
+  "external": null,
+  "backend_version": null,
+  "dims": [
+    3,
+    3
+  ],
+  "distribution": "ghz_w_3x3",
+  "initial": 12,
+  "pool": 80,
+  "cycles": 2,
+  "queries": 6,
+  "epochs": 80,
+  "test": 40,
+  "val": 12,
+  "patience": 20,
+  "batch_size": 32,
+  "mc_samples": 20,
+  "oracle_N": 30,
+  "oracle_iters": 3,
+  "oracle_seed": 914,
+  "test_seed": 812739,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "threshold": 0.99,
+  "device": "cpu",
+  "output": "results/ghzw_local_complete/rf",
+  "cache": "results/ghzw_local_pilot/oracle_cache",
+  "no_plot": false,
+  "feature_version": "density-local-spectra-v2",
+  "target": "min(1, backend visibility); lower estimate unless exact backend",
+  "protocol": "frozen val/test, paired initial/pool, cold refit each cycle",
+  "versions": {
+    "numpy": "2.3.5",
+    "scipy": "1.17.0",
+    "scikit-learn": "1.8.0",
+    "torch": null,
+    "cvxpy": "1.9.3"
+  },
+  "source_sha256": {
+    "active_learning.py": "544e52395f63a2422c18cf4f5b40985bd84e87c4f052df9525ee4e67da3619ab",
+    "ohst_bridge.py": "574bcf5c6a1438509efad6ed73c9682202b46715339654b8e51532619c2eb367",
+    "ghzw_report.py": "47cc1ac4c2cd82cdb0d5961cb4c0803b53f40adb6e089eeae1074c2b14d8ccc0",
+    "benchmarks.py": "aa1577cb70a09fc7d8e774c6d7e380057a67cfd45527034d3b2bf37f9635d43b",
+    "acquisition.py": "9c4919f8acbe9545dad2e13b6a80d954eadd7ece7c4ae7cc37520c776f0ce4bf",
+    "adaptive.py": "e46041158079761bf84dbf7a15763709cb1b2240efd9494a327468452de9b51b",
+    "train.py": "e3a3656d6bffaa8068c9059a5c8dbf932842eb28394d0d39af7f66080d27cd07",
+    "setup_ohst.py": "fabe937f9002c0bf614f7d9428e7d9429839a67decf61d184e5cf24ed5bf4f5d",
+    "states.py": "ff17be388e98e4ccd5f852b487772bf44f71c636ef533737cb90cc609de4a332",
+    "network.py": "fbb03dd77912ffd8520e687f4ea1650788b5c03ff0925113b16fd11b4eb07798",
+    "oracle.py": "a8f38a12170543079992b6f2d3724bc621225d362ddb3d89c8ddac95679f5f21",
+    "dataset.py": "78c1fb1a9c94332cac1177f8ea41a0ec31d406a15926f3c903f952150513539a",
+    "ghzw_compare.py": "5094e2bd40b70310b4fc6116531a8c71b3304980936b2bdfa8994a76290c5bb1",
+    "ghzw_diagnostics.py": "d165d82a5d424d020f1fc4fde77de7c6358e612a44676449be2a4b3aaaf8929d",
+    "__init__.py": "6f780bf21545bf774b98f51e91f0fad7eb765302bbc32fffd6aab7bb5a9042cb",
+    "ohst_reproduction.py": "951ef9966a4ae4c417b6e5f7e8999778d184401ada3ac23e3a0e1904471ecafa"
+  },
+  "state_family": {
+    "G": "(00+11+22)/sqrt(3)",
+    "W": "(01+10)/sqrt(2)",
+    "mixture": "p_g GG* + p_w WW* + (1-p_g-p_w) I9/9",
+    "sampling": "Dirichlet(1,1,1), uniform area on weight simplex"
+  }
+}

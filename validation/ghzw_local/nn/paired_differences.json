@@ -1,0 +1,32 @@
+[
+  {
+    "seed": 0,
+    "strategy": "uncertainty",
+    "mae_difference_vs_random": -0.007133184608197403
+  },
+  {
+    "seed": 0,
+    "strategy": "boundary",
+    "mae_difference_vs_random": 0.01732283713325629
+  },
+  {
+    "seed": 1,
+    "strategy": "uncertainty",
+    "mae_difference_vs_random": 0.005009913862980733
+  },
+  {
+    "seed": 1,
+    "strategy": "boundary",
+    "mae_difference_vs_random": -0.022090001788228314
+  },
+  {
+    "seed": 2,
+    "strategy": "uncertainty",
+    "mae_difference_vs_random": -0.00696931745948233
+  },
+  {
+    "seed": 2,
+    "strategy": "boundary",
+    "mae_difference_vs_random": -0.0068336971963904175
+  }
+]

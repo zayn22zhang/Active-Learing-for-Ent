@@ -1,0 +1,62 @@
+[
+  {
+    "model": "nn",
+    "strategy": "random",
+    "train_queries": 24,
+    "seeds": 3,
+    "mae_mean": 0.07662806214794883,
+    "mae_std": 0.033076997910553435,
+    "rmse_mean": 0.1092556080451151,
+    "ppt_upper_baseline_mae": 0.018273505252674155
+  },
+  {
+    "model": "nn",
+    "strategy": "uncertainty",
+    "train_queries": 24,
+    "seeds": 3,
+    "mae_mean": 0.07359719941304917,
+    "mae_std": 0.0338430623680902,
+    "rmse_mean": 0.1138498753919079,
+    "ppt_upper_baseline_mae": 0.018273505252674155
+  },
+  {
+    "model": "nn",
+    "strategy": "boundary",
+    "train_queries": 24,
+    "seeds": 3,
+    "mae_mean": 0.07276110819749469,
+    "mae_std": 0.026382392320209714,
+    "rmse_mean": 0.09932115233796164,
+    "ppt_upper_baseline_mae": 0.018273505252674155
+  },
+  {
+    "model": "rf",
+    "strategy": "random",
+    "train_queries": 24,
+    "seeds": 3,
+    "mae_mean": 0.06583998810578727,
+    "mae_std": 0.013764673230246579,
+    "rmse_mean": 0.09670796579187547,
+    "ppt_upper_baseline_mae": 0.018273505252674155
+  },
+  {
+    "model": "rf",
+    "strategy": "uncertainty",
+    "train_queries": 24,
+    "seeds": 3,
+    "mae_mean": 0.06942756102258518,
+    "mae_std": 0.018764641159538152,
+    "rmse_mean": 0.10391058500358753,
+    "ppt_upper_baseline_mae": 0.018273505252674155
+  },
+  {
+    "model": "rf",
+    "strategy": "boundary",
+    "train_queries": 24,
+    "seeds": 3,
+    "mae_mean": 0.08009442451524522,
+    "mae_std": 0.010652580373478274,
+    "rmse_mean": 0.11816467387337755,
+    "ppt_upper_baseline_mae": 0.018273505252674155
+  }
+]

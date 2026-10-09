@@ -113,3 +113,7 @@ Zhang 的局域幺正增强针对真实分类标签有依据。但有限预算�
 - `figures/`、`papers/`、`patches/`：既有研究资料。历史图表不是新流程的验证结果。
 
 常用命令：`python -m al4qed.train --help`、`python -m al4qed.benchmarks --help`。
+
+## Two-qutrit G/W mixture
+
+A new `--distribution ghz_w_3x3 --dims 3 3` experiment uses an explicitly defined G/W/white-noise mixture on two qutrits. It is not a three-party GHZ/W classification task. See [definition and commands](docs/GHZW_3X3.md) and [run results](docs/GHZW_3X3_RESULTS.md). The paired pilot entry point is `python -m al4qed.ghzw_compare --backend external --output results/ghzw_official`.

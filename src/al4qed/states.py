@@ -48,3 +48,17 @@ def isotropic_state(p, d=2):
         raise ValueError('Require p in [0,1] and integer d>=2')
     psi = np.eye(d).reshape(-1) / np.sqrt(d)
     return p*np.outer(psi, psi.conj()) + (1-p)*np.eye(d*d)/(d*d)
+
+
+def ghz_w_3x3(p_g, p_w):
+    """Two-qutrit G/W/white-noise mixture, not a three-party GHZ/W state.
+
+    G=(|00>+|11>+|22>)/sqrt(3), W=(|01>+|10>)/sqrt(2).
+    rho=p_g*|G><G|+p_w*|W><W|+(1-p_g-p_w)*I_9/9.
+    """
+    weights = np.asarray([p_g, p_w], dtype=float)
+    if not np.isfinite(weights).all() or np.any(weights < 0) or weights.sum() > 1:
+        raise ValueError('Require finite p_g,p_w >= 0 and p_g+p_w <= 1')
+    g = np.eye(3).reshape(-1) / np.sqrt(3)
+    w = np.zeros(9); w[[1, 3]] = 1 / np.sqrt(2)
+    return p_g*np.outer(g,g) + p_w*np.outer(w,w) + (1-p_g-p_w)*np.eye(9)/9
